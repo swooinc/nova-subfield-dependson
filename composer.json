@@ -1,0 +1,34 @@
+{
+    "name": "formfeed-uk/nova-subfields",
+    "description": "Subfields interface for Nova Fields",
+    "license": "MIT",
+    "require": {
+        "php": "^8.0",
+        "laravel/framework": "^8.0|^9.0",
+        "laravel/nova": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Formfeed\\NovaSubfields\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://nova.laravel.com"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "phpunit --colors=always tests"
+    }
+}
