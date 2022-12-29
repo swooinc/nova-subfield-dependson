@@ -71,7 +71,7 @@ class InterceptSubfieldDependsOn {
 
             // If there are additional actions needed after dependsOn sync, run them
             if (method_exists($field, "afterDependsOnSync")) {
-                $field = $field->afterDependsOnSync() ?? $field;
+                $field = $field->afterDependsOnSync($novaRequest) ?? $field;
             }
 
             $response = response()->json($field);
