@@ -11,4 +11,6 @@ interface Subfield
 
     public function getSubfields(): FieldCollection;
 
+    public function afterDependsOnSync() : self;
+
 }

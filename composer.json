@@ -1,6 +1,6 @@
 {
-    "name": "formfeed-uk/nova-subfields",
-    "description": "Subfields interface for Nova Fields",
+    "name": "formfeed-uk/nova-subfield-dependson",
+    "description": "Functionality to allow fields which are contained within other fields to use Nova DependsOn",
     "license": "MIT",
     "require": {
         "php": "^8.0",
@@ -9,12 +9,19 @@
     },
     "autoload": {
         "psr-4": {
-            "Formfeed\\Subfields\\": "src/"
+            "Formfeed\\SubfieldDependsOn\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Formfeed\\SubfieldDependsOn\\SubfieldServiceProvider"
+            ]
         }
     },
     "repositories": [
