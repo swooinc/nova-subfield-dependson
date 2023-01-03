@@ -4,12 +4,11 @@ namespace Formfeed\SubfieldDependsOn\Http\Middleware;
 
 use ArrayObject;
 use Closure;
-use Formfeed\DependablePanel\DependablePanel;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use Illuminate\Support\Str;
 use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Http\Controllers\UpdateFieldController;
 use Laravel\Nova\Http\Controllers\CreationFieldController;
@@ -18,10 +17,15 @@ use Laravel\Nova\Http\Controllers\UpdatePivotFieldController;
 use Laravel\Nova\Http\Controllers\CreationPivotFieldController;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-use Formfeed\NovaFlexibleContent\Flexible as FormfeedFlexible;
-use Illuminate\Support\Collection;
+use Laravel\Nova\Http\Resources\UpdateViewResource;
+use Laravel\Nova\Http\Resources\UpdatePivotFieldResource;
+use Laravel\Nova\Http\Resources\CreateViewResource;
+use Laravel\Nova\Http\Resources\CreationPivotFieldResource;
+use Laravel\Nova\Http\Resources\ReplicateViewResource;
+
 use Laravel\Nova\Fields\Field;
-use Whitecube\NovaFlexibleContent\Flexible as WhitecubeFlexible;
+use Laravel\Nova\Http\Requests\ResourceCreateOrAttachRequest;
+use Laravel\Nova\Http\Requests\ResourceUpdateOrUpdateAttachedRequest;
 
 class InterceptSubfieldDependsOn {
 
@@ -44,7 +48,7 @@ class InterceptSubfieldDependsOn {
         if (!$this->isDependentFieldRequest($request)) {
             return $next($request);
         }
-        
+
         if (!$this->resourceHasSubfields($novaRequest)) {
             return $next($request);
         }
@@ -81,10 +85,7 @@ class InterceptSubfieldDependsOn {
     }
 
     protected function isDependentFieldRequest(Request $request) {
-        if (!$request->isMethod("PATCH")) {
-            return false;
-        }
-        return (is_null($this->getFieldMethod($request))) ? false : true;
+        return ($request->isMethod("PATCH") && $this->isNovaFieldController($request));
     }
 
     protected function findField(NovaRequest $request, string $componentKey) {
@@ -116,9 +117,7 @@ class InterceptSubfieldDependsOn {
     }
 
     protected function getResourceFields(NovaRequest $request): FieldCollection {
-        $fieldMethod = $this->getFieldMethod($request);
-        return $request->newResource()
-            ->$fieldMethod($request);
+        return $this->getFieldsForRequest($request);
     }
 
     protected function resourceHasSubfields(NovaRequest $request): bool {
@@ -127,18 +126,42 @@ class InterceptSubfieldDependsOn {
         });
     }
 
-    protected function getFieldMethod(Request $request) {
+    protected function isNovaFieldController(Request $request) {
+        $routeController = $request->route()->getController();
+        return in_array(get_class($routeController), [
+            UpdateFieldController::class,
+            UpdatePivotFieldController::class,
+            CreationFieldController::class,
+            CreationFieldSyncController::class,
+            CreationPivotFieldController::class,
+        ]);
+    }
+
+    protected function getFieldsForRequest(NovaRequest $request) {
         $routeController = $request->route()->getController();
         switch (get_class($routeController)) {
-            case UpdateFieldController::class:
-                return "updateFieldsWithinPanels";
-            case UpdatePivotFieldController::class:
-                return "updatePivotFields";
+            case UpdateFieldController::class: {
+                $resource = UpdateViewResource::make()->newResourceWith(ResourceUpdateOrUpdateAttachedRequest::createFrom($request));
+                return $resource->creationFieldsWithinPanels($request);
+            }
+            case UpdatePivotFieldController::class: {
+                $resource = UpdatePivotFieldResource::make()->newResourceWith(ResourceUpdateOrUpdateAttachedRequest::createFrom($request));
+                return $resource->updatePivotFields($request, $request->relatedResource);
+            }
             case CreationFieldController::class:
-            case CreationFieldSyncController::class:
-                return "creationFieldsWithinPanels";
-            case CreationPivotFieldController::class:
-                return "creationPivotFields";
+            case CreationFieldSyncController::class: {
+                $resource = $request->has('fromResourceId')
+                    ? ReplicateViewResource::make($request->fromResourceId)->newResourceWith(ResourceCreateOrAttachRequest::createFrom($request))
+                    : CreateViewResource::make()->newResourceWith(ResourceCreateOrAttachRequest::createFrom($request));
+                return $resource->updateFieldsWithinPanels($request);
+            }
+            case CreationPivotFieldController::class: {
+                $resource = CreationPivotFieldResource::make()->newResourceWith(ResourceCreateOrAttachRequest::createFrom($request));
+                return $resource->creationPivotFields($request, $request->relatedResource);
+            }
+            default: {
+                return FieldCollection::make([]);
+            }
         }
     }
 }
