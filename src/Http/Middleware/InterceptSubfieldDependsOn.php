@@ -63,7 +63,7 @@ class InterceptSubfieldDependsOn {
 
             // If the Field is not resolved, try to find it and sync depends on
             if ($content instanceof ArrayObject && $content->count() === 0) {
-                $field = $this->findField($novaRequest, $request->input("component"), $request->input("_viaField"));
+                $field = $this->findField($novaRequest, $request->input("component"));
                 if ($field instanceof Field) {
                     $field->syncDependsOn($novaRequest);
                 }
@@ -87,9 +87,9 @@ class InterceptSubfieldDependsOn {
         return (is_null($this->getFieldMethod($request))) ? false : true;
     }
 
-    protected function findField(NovaRequest $request, string $componentKey, string $viaField) {
+    protected function findField(NovaRequest $request, string $componentKey) {
         $fields = $this->getResourceFields($request);
-        return $this->findNestedField($request, $fields, $componentKey, $viaField);
+        return $this->findNestedField($request, $fields, $componentKey);
     }
 
     protected function findNestedField(NovaRequest $request, FieldCollection $fields, string $componentKey) {
