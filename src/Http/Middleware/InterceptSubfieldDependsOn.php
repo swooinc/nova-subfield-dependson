@@ -122,7 +122,7 @@ class InterceptSubfieldDependsOn {
     }
 
     protected function resourceHasSubfields(NovaRequest $request): bool {
-        return $this->getResourceFields($request)->contains(function ($field) {
+        return $request->newResource()->availableFields($request)->contains(function ($field) {
             return method_exists($field, "getSubfields") && method_exists($field, "hasSubfields");
         });
     }
