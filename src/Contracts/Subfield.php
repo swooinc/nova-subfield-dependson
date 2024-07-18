@@ -1,6 +1,6 @@
 <?php
 
-namespace Formfeed\SubfieldDependsOn;
+namespace Formfeed\SubfieldDependsOn\Contracts;
 
 use Laravel\Nova\Fields\FieldCollection;
 
