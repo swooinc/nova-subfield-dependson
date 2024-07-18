@@ -1,6 +1,6 @@
 <?php
 
-namespace Formfeed\Subfields;
+namespace Formfeed\SubfieldDependsOn;
 
 use Laravel\Nova\Fields\FieldCollection;
 
